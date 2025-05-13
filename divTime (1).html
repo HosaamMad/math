@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تمرين العمليات الحسابية</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      margin-top: 50px;
+    }
+    /* صندوق عرض المعادلة */
+    #equationBox {
+      font-size: 28px;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 10px;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      background-color: #ffffff;
+      color: #000;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px;
+      font-size: 20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: none;
+      background-color: #007bff;
+      color: #ffffff;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    /* تنسيق أزرار اختيار العملية */
+    #operationButtons {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    #operationButtons button {
+      width: 200px;
+      font-size: 26px;
+      background-color: #ff9800;
+    }
+    #operationButtons button:hover {
+      background-color: #e68900;
+    }
+    /* زر بدء مباراة جديدة */
+    #newGameBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      font-size: 22px;
+      width: 220px;
+      background-color: #28a745;
+    }
+    #newGameBtn:hover {
+      background-color: #218838;
+    }
+    p {
+      font-size: 28px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>تمرين العمليات الحسابية</h1>
+    <div id="operationButtons">
+      <button onclick="setOperation('+')">جمع</button>
+      <button onclick="setOperation('-')">طرح</button>
+      <button onclick="setOperation('×')">ضرب عددين</button>
+      <button onclick="setOperation('×1')">ضرب عدد واحد</button>
+      <button onclick="setOperation('÷')">قسمة</button>
+    </div>
+
+    <!-- صندوق عرض المعادلة -->
+    <input type="text" id="equationBox" readonly>
+
+    <div class="grid">
+      <button onclick="addToAnswer(1)">1</button>
+      <button onclick="addToAnswer(2)">2</button>
+      <button onclick="addToAnswer(3)">3</button>
+      <button onclick="addToAnswer(4)">4</button>
+      <button onclick="addToAnswer(5)">5</button>
+      <button onclick="addToAnswer(6)">6</button>
+      <button onclick="addToAnswer(7)">7</button>
+      <button onclick="addToAnswer(8)">8</button>
+      <button onclick="addToAnswer(9)">9</button>
+      <button onclick="clearAnswer()">حذف</button>
+      <button onclick="addToAnswer(0)">0</button>
+      <button onclick="checkAnswer()">تحقق</button>
+    </div>
+
+    <p id="result"></p>
+    <p id="timer"></p>
+    <p id="score"></p>
+    <button id="newGameBtn" onclick="startNewGame()">مباراة جديدة</button>
+  </div>
+
+  <script>
+    let num1, num2, operation;
+    let answer = "";
+    let timeLeft = 15;
+    let timer;
+    let correctAnswers = 0;
+    let wrongAnswers = 0;
+    let questionCount = 0;
+    let usedQuestions = []; // قائمة لتخزين الأسئلة السابقة
+
+    function setOperation(selectedOperation) {
+      operation = selectedOperation;
+      document.getElementById('operationButtons').style.display = "none";
+      generateQuestion();
+    }
+
+    function generateQuestion() {
+      if (questionCount >= 50) {
+        endGame();
+        return;
+      }
+
+      let question;
+      do {
+        num1 = Math.floor(Math.random() * 90) + 10;
+        num2 = Math.floor(Math.random() * 9) + 2;
+
+        if (operation === '+') {
+          question = `${num1} + ${num2} = ?`;
+        } else if (operation === '-') {
+          if (num1 < num2) [num1, num2] = [num2, num1];
+          question = `${num1} - ${num2} = ?`;
+        } else if (operation === '×') {
+          question = `${num1} × ${num2} = ?`;
+        } else if (operation === '×1') {
+          num1 = Math.floor(Math.random() * 9) + 2;
+          num2 = Math.floor(Math.random() * 9) + 2;
+          question = `${num1} × ${num2} = ?`;
+        } else if (operation === '÷') {
+          num2 = num1 * (Math.floor(Math.random() * 90) + 10);
+          question = `${num2} ÷ ${num1} = ?`;
+        }
+      } while (usedQuestions.includes(question)); // التأكد من عدم تكرار السؤال
+
+      usedQuestions.push(question); // حفظ السؤال لمنع تكراره
+      document.getElementById('equationBox').value = question;
+
+      timeLeft = 15;
+      document.getElementById('timer').textContent = `⏳ ${timeLeft} ثانية متبقية`;
+      document.getElementById('score').textContent = `✅ صحيحة: ${correctAnswers} | ❌ خاطئة: ${wrongAnswers}`;
+      clearAnswer();
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = `⏳ ${timeLeft} ثانية متبقية`;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          wrongAnswers++;
+          questionCount++;
+          generateQuestion();
+        }
+      }, 1000);
+    }
+
+    function addToAnswer(num) {
+      answer += num;
+      document.getElementById('result').textContent = answer;
+    }
+
+    function clearAnswer() {
+      answer = "";
+      document.getElementById('result').textContent = "";
+    }
+
+    function checkAnswer() {
+      let correctAnswer;
+      if (operation === '+') correctAnswer = num1 + num2;
+      else if (operation === '-') correctAnswer = num1 - num2;
+      else if (operation === '×' || operation === '×1') correctAnswer = num1 * num2;
+      else if (operation === '÷') correctAnswer = num2 / num1;
+
+      document.getElementById('equationBox').value = document.getElementById('equationBox').value.replace('?', answer);
+      
+      if (parseInt(answer) === correctAnswer) {
+        document.getElementById('result').textContent = "✅ صحيح!";
+        correctAnswers++;
+      } else {
+        document.getElementById('result').textContent = "❌ خاطئ، حاول مرة أخرى.";
+        wrongAnswers++;
+      }
+
+      questionCount++;
+      setTimeout(generateQuestion, 1000);
+    }
+
+    function startNewGame() {
+      correctAnswers = 0;
+      wrongAnswers = 0;
+      questionCount = 0;
+      usedQuestions = []; // إعادة تعيين قائمة الأسئلة المستخدمة
+      document.getElementById('newGameBtn').style.display = "none";
+      document.getElementById('operationButtons').style.display = "block";
+    }
+  </script>
+</body>
+</html>
+</html>
